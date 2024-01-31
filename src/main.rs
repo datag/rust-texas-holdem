@@ -15,7 +15,15 @@ fn main() {
         Card { face: Face::Two,   suit: Suit::Clubs },
     ];
 
+    let ten = Card {
+        face: Face::Ten,
+        suit: Suit::Spades,
+    };
+
     for card in cards {
-        println!("Your card is {card} ({card:?}) [ {} ]", card.symbol());
+        println!("Your card is {card} {} ({card:?}) [>Ten {:?}, =Ten {:?}]",
+            card.symbol(),
+            card > ten,
+            card == ten);
     }
 }
