@@ -6,7 +6,7 @@
 
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Card {
     pub face: Face,
     pub suit: Suit,
@@ -128,7 +128,7 @@ impl fmt::Debug for Face {
     }
 }
 
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(PartialEq, Eq, Copy, Clone, Hash)]
 #[repr(u8)]
 #[rustfmt::skip]
 pub enum Suit {

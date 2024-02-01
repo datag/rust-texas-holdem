@@ -39,6 +39,10 @@ impl Deck {
         self.cards.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.cards.is_empty()
+    }
+
     pub fn iter(&self) -> std::slice::Iter<'_, Card> {
         self.cards.iter()
     }

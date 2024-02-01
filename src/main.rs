@@ -1,5 +1,5 @@
 use crate::{
-    card::{Card, Face, Suit}, deck::Deck, game_logic::Ranking
+    card::{Card, Face, Suit}, deck::Deck, game_logic::{Hand, Ranking}
 };
 
 pub mod card;
@@ -16,6 +16,7 @@ fn main() {
         Card { face: Face::Queen, suit: Suit::Diamonds },
         Card { face: Face::Jack,  suit: Suit::Clubs },
         Card { face: Face::Ten,   suit: Suit::Hearts },
+        Card { face: Face::Two,   suit: Suit::Clubs },
         Card { face: Face::Two,   suit: Suit::Clubs },
     ];
 
@@ -74,4 +75,18 @@ fn main() {
     ] {
         println!("{} ({})\n p = {:.6} %", ranking, ranking.combinations(), ranking.probability() * 100f32);
     }
+
+    println!("----------------------------");
+
+    let mut deck = Deck::new();
+
+    deck.shuffle();
+
+    let hand = Hand::new(
+        (deck.pop().unwrap(), deck.pop().unwrap()),
+        Some((deck.pop().unwrap(), deck.pop().unwrap(), deck.pop().unwrap())),
+        deck.pop(),
+        deck.pop());
+
+    println!("{:?}\n{:?}", hand, hand.strength());
 }
