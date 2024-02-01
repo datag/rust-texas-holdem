@@ -1,10 +1,10 @@
 use crate::{
-    card::{Card, Face, Suit},
-    deck::Deck,
+    card::{Card, Face, Suit}, deck::Deck, game_logic::Ranking
 };
 
 pub mod card;
 pub mod deck;
+pub mod game_logic;
 
 fn main() {
     println!("Rust Texas Holdem");
@@ -38,7 +38,7 @@ fn main() {
 
     let mut deck = Deck::new();
 
-    println!("Deck: {:?}", deck);
+    println!("{:?}", deck);
 
     for card in deck.iter() {
         print!("[{}]", card);
@@ -60,4 +60,18 @@ fn main() {
     let top_card = deck.pop().unwrap();
     println!("Top card: {}", top_card);
 
+    for ranking in [
+        Ranking::HighCard,
+        Ranking::OnePair,
+        Ranking::TwoPair,
+        Ranking::ThreeOfAKind,
+        Ranking::Straight,
+        Ranking::Flush,
+        Ranking::FullHouse,
+        Ranking::FourOfAKind,
+        Ranking::StraightFlush,
+        Ranking::RoyalFlush,
+    ] {
+        println!("{} ({})\n p = {:.6} %", ranking, ranking.combinations(), ranking.probability() * 100f32);
+    }
 }
