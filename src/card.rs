@@ -172,7 +172,7 @@ impl Suit {
 
 impl fmt::Display for Suit {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol())
+        write!(f, "{}", self.abbr())
     }
 }
 
