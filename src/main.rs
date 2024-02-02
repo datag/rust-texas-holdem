@@ -76,17 +76,102 @@ fn main() {
         println!("{} ({})\n p = {:.6} %", ranking, ranking.combinations(), ranking.probability() * 100f32);
     }
 
+    // println!("----------------------------");
+
+    // let mut deck = Deck::new();
+
+    // deck.shuffle();
+
+    // let hand = Hand::new(
+    //     (deck.pop().unwrap(), deck.pop().unwrap()),
+    //     Some((deck.pop().unwrap(), deck.pop().unwrap(), deck.pop().unwrap())),
+    //     deck.pop(),
+    //     deck.pop());
+
+    // println!("{:?}\n{:?}", hand, hand.strength());
+
     println!("----------------------------");
 
-    let mut deck = Deck::new();
 
-    deck.shuffle();
+    // full house
+    // let hand = Hand::new(
+    //     (Card { face: Face::Jack,   suit: Suit::Spades }, Card { face: Face::Ace,   suit: Suit::Clubs }),
+    //     Some((Card { face: Face::Two,   suit: Suit::Clubs }, Card { face: Face::Jack,  suit: Suit::Clubs }, Card { face: Face::Jack,  suit: Suit::Hearts })),
+    //     Some(Card { face: Face::Ace,   suit: Suit::Hearts }),
+    //     Some(Card { face: Face::Two,   suit: Suit::Diamonds }),
+    // );
 
+    // two pairs
+    // let hand = Hand::new(
+    //     (Card { face: Face::Ten,   suit: Suit::Spades }, Card { face: Face::Ace,   suit: Suit::Clubs }),
+    //     Some((Card { face: Face::Two,   suit: Suit::Clubs }, Card { face: Face::Jack,  suit: Suit::Clubs }, Card { face: Face::Jack,  suit: Suit::Hearts })),
+    //     Some(Card { face: Face::Ace,   suit: Suit::Hearts }),
+    //     Some(Card { face: Face::Ten,   suit: Suit::Diamonds }),
+    // );
+
+    // one pair
+    // let hand = Hand::new(
+    //     (Card { face: Face::Ten,   suit: Suit::Spades }, Card { face: Face::Ace,   suit: Suit::Clubs }),
+    //     Some((Card { face: Face::Two,   suit: Suit::Clubs }, Card { face: Face::Nine,  suit: Suit::Clubs }, Card { face: Face::Jack,  suit: Suit::Hearts })),
+    //     Some(Card { face: Face::Eight,   suit: Suit::Hearts }),
+    //     Some(Card { face: Face::Ten,   suit: Suit::Diamonds }),
+    // );
+
+    // three of a kind
+    // let hand = Hand::new(
+    //     (Card { face: Face::Ten,   suit: Suit::Spades }, Card { face: Face::Ace,   suit: Suit::Clubs }),
+    //     Some((Card { face: Face::Two,   suit: Suit::Clubs }, Card { face: Face::Nine,  suit: Suit::Clubs }, Card { face: Face::Jack,  suit: Suit::Hearts })),
+    //     Some(Card { face: Face::Ten,   suit: Suit::Hearts }),
+    //     Some(Card { face: Face::Ten,   suit: Suit::Diamonds }),
+    // );
+
+    // four of a kind
+    // let hand = Hand::new(
+    //     (Card { face: Face::Ten,   suit: Suit::Spades }, Card { face: Face::Ace,   suit: Suit::Clubs }),
+    //     Some((Card { face: Face::Ten,   suit: Suit::Clubs }, Card { face: Face::Nine,  suit: Suit::Clubs }, Card { face: Face::Jack,  suit: Suit::Hearts })),
+    //     Some(Card { face: Face::Ten,   suit: Suit::Hearts }),
+    //     Some(Card { face: Face::Ten,   suit: Suit::Diamonds }),
+    // );
+
+    // high card
+    // let hand = Hand::new(
+    //     (Card { face: Face::Ten,   suit: Suit::Spades }, Card { face: Face::Ace,   suit: Suit::Clubs }),
+    //     Some((Card { face: Face::Two,   suit: Suit::Clubs }, Card { face: Face::Nine,  suit: Suit::Clubs }, Card { face: Face::Jack,  suit: Suit::Hearts })),
+    //     Some(Card { face: Face::Eight,   suit: Suit::Hearts }),
+    //     Some(Card { face: Face::Seven,   suit: Suit::Diamonds }),
+    // );
+
+    // straight
+    // let hand = Hand::new(
+    //     (Card { face: Face::Ten,   suit: Suit::Spades }, Card { face: Face::Ace,   suit: Suit::Clubs }),
+    //     Some((Card { face: Face::Queen,   suit: Suit::Clubs }, Card { face: Face::King,  suit: Suit::Clubs }, Card { face: Face::Jack,  suit: Suit::Hearts })),
+    //     Some(Card { face: Face::Two,   suit: Suit::Hearts }),
+    //     Some(Card { face: Face::Seven,   suit: Suit::Diamonds }),
+    // );
+
+    // straight wheel
+    // let hand = Hand::new(
+    //     (Card { face: Face::Five,   suit: Suit::Spades }, Card { face: Face::Four,   suit: Suit::Clubs }),
+    //     Some((Card { face: Face::Three,   suit: Suit::Clubs }, Card { face: Face::King,  suit: Suit::Clubs }, Card { face: Face::Ace,  suit: Suit::Hearts })),
+    //     Some(Card { face: Face::Two,   suit: Suit::Hearts }),
+    //     Some(Card { face: Face::Seven,   suit: Suit::Diamonds }),
+    // );
+
+    // royal flush
+    // let hand = Hand::new(
+    //     (Card { face: Face::Ten,   suit: Suit::Spades }, Card { face: Face::Ace,   suit: Suit::Spades }),
+    //     Some((Card { face: Face::Queen,   suit: Suit::Spades }, Card { face: Face::King,  suit: Suit::Spades }, Card { face: Face::Jack,  suit: Suit::Spades })),
+    //     Some(Card { face: Face::Two,   suit: Suit::Spades }),
+    //     Some(Card { face: Face::Seven,   suit: Suit::Diamonds }),
+    // );
+
+    // straight flush
     let hand = Hand::new(
-        (deck.pop().unwrap(), deck.pop().unwrap()),
-        Some((deck.pop().unwrap(), deck.pop().unwrap(), deck.pop().unwrap())),
-        deck.pop(),
-        deck.pop());
+        (Card { face: Face::Ten,   suit: Suit::Spades }, Card { face: Face::Nine,   suit: Suit::Spades }),
+        Some((Card { face: Face::Queen,   suit: Suit::Spades }, Card { face: Face::King,  suit: Suit::Spades }, Card { face: Face::Jack,  suit: Suit::Spades })),
+        Some(Card { face: Face::Two,   suit: Suit::Spades }),
+        Some(Card { face: Face::Seven,   suit: Suit::Diamonds }),
+    );
 
     println!("{:?}\n{:?}", hand, hand.strength());
 }

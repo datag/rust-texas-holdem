@@ -57,7 +57,7 @@ impl fmt::Display for Card {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Hash)]
 #[repr(u8)]
 #[rustfmt::skip]
 pub enum Face {

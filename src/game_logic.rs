@@ -11,8 +11,12 @@ const HAND_COMBINATIONS: u32 = 133_784_560;       // (52 !) / ((45 !) * (7 !))
 #[derive(Debug)]
 pub struct Hand {
     cards: Vec<Card>,
+    face_map: HashMap<Face, Vec<Card>>,
+    face_count: Vec<FaceCount>,
 }
 
+// FIXME: Rename; hand should be final hand, but the strength calculation with all cards
+// TODO: Final hand should be cards 2-5 and the strength
 impl Hand {
     pub fn new(hole_cards: (Card, Card), flop_cards: Option<(Card, Card, Card)>, turn_card: Option<Card>, river_card: Option<Card>) -> Self {
         let mut cards = Vec::new();
@@ -38,8 +42,31 @@ impl Hand {
         cards.sort();
         cards.reverse();
 
+
+        // Build a hash map with Face as key and matching Cards as value
+        let mut face_map: HashMap<Face, Vec<Card>> = HashMap::new();
+        for card in &cards {
+            let cards_of_face = face_map.entry(card.face).or_default();
+            cards_of_face.push(*card);
+        }
+
+        
+        // Build a vector of tuples (card_count, Face)
+        let mut face_count: Vec<FaceCount> = face_map
+            .iter()
+            .map(|(face, cards)| FaceCount {face: *face, count: cards.len()})
+            .collect();
+
+        // sort by count and after that by face
+        face_count.sort_by(|a, b| {
+            b.count.cmp(&a.count).then_with(|| b.face.cmp(&a.face))
+        });
+
+
         Self {
             cards,
+            face_map,
+            face_count,
         }
     }
 
@@ -70,26 +97,60 @@ impl Hand {
     }
 
     fn eval_straight_flush(&self) -> Option<Strength> {
-        // TODO: is flush AND straight w/ matching face
-        // TODO: special case royal flush: is straight flush w/ Ace as top card
-        None
+        if let Some(strength) = self.eval_flush() {
+            let match_suit = strength.rank_cards.unwrap().first().unwrap().suit;
+
+            if let Some(strength) = self.eval_straight(Some(match_suit)) {
+                let cards = &strength.rank_cards.unwrap();
+                let top_card = cards.first().unwrap();
+                if top_card.face == Face::Ace {
+                    Some(Strength {
+                        ranking: Ranking::RoyalFlush,
+                        rank_cards: None,
+                        kicker_cards: None,
+                    })
+                } else {
+                    Some(Strength {
+                        ranking: Ranking::StraightFlush,
+                        rank_cards: Some(vec![*top_card]),
+                        kicker_cards: None,
+                    })
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 
     fn eval_four_of_a_kind(&self) -> Option<Strength> {
-        self.eval_n_of_a_kind(4, None)
+        self.eval_n_of_a_kind(4)
     }
 
     fn eval_full_house(&self) -> Option<Strength> {
-        // TODO: use 2x n-of-kind? first for 3, then for 2 w/ face exclude
-        None
+        let trips_slot = self.face_count.first()?;
+        let pair_slot = self.face_count.get(1)?;
+        
+        if trips_slot.count >= 3 && pair_slot.count >= 2 {
+            Some(Strength {
+                ranking: Ranking::FullHouse,
+                rank_cards: Some(vec![
+                    self.face_map.get(&trips_slot.face).unwrap()[0],     // trips card
+                    self.face_map.get(&pair_slot.face).unwrap()[0],      // pair card
+                ]),
+                kicker_cards: None,
+            })
+        } else {
+            None
+        }
     }
 
     fn eval_flush(&self) -> Option<Strength> {
         let mut suit_card_map: HashMap<Suit, Vec<Card>> = HashMap::new();
 
         for card in &self.cards {
-            let suit = card.suit;
-            let cards_of_suit = suit_card_map.entry(suit).or_default();
+            let cards_of_suit = suit_card_map.entry(card.suit).or_default();
             cards_of_suit.push(*card);
 
             // We've got 5 of one suit, which is a flush
@@ -106,34 +167,113 @@ impl Hand {
     }
 
     fn eval_straight(&self, match_suit: Option<Suit>) -> Option<Strength> {
-        // TODO: special case A2345-straight ("wheel")
-        None
+        let mut consecutive = 1;
+        let mut prev_card = &self.cards[0];
+        let mut top_card = &self.cards[0];
+        let mut is_straight = false;
+
+        for card in &self.cards[1..] {
+            if card.face as u8 == (prev_card.face as u8) - 1 && match_suit.map(|suit| card.suit == suit).unwrap_or(true) {
+                consecutive += 1;
+            } else {
+                consecutive = 1;
+                top_card = card;
+            }
+
+            if consecutive == 5 {
+                is_straight = true;
+                break;
+            }
+
+            prev_card = card;
+        }
+
+        // Test for special case 5432A straight ("wheel")
+        if !is_straight && consecutive == 4 && top_card.face == Face::Five
+            && self.cards[0].face == Face::Ace && match_suit.map(|suit| self.cards[0].suit == suit).unwrap_or(true) {
+            is_straight = true;
+        }
+
+        if is_straight {
+            Some(Strength {
+                ranking: Ranking::Straight,
+                rank_cards: Some(vec![*top_card]),
+                kicker_cards: None,
+            })
+        } else {
+            None
+        }
     }
 
     fn eval_three_of_a_kind(&self) -> Option<Strength> {
-        self.eval_n_of_a_kind(3, None)
+        self.eval_n_of_a_kind(3)
     }
 
     fn eval_two_pair(&self) -> Option<Strength> {
-        // TODO: use 2x n-of-kind? second time w/ face exclude
-        None
+        let first_pair_slot = self.face_count.first()?;
+        let second_pair_slot = self.face_count.get(1)?;
+        
+        if first_pair_slot.count >= 2 && second_pair_slot.count >= 2 {
+            let kicker_slot = self.face_count.get(2);
+
+            Some(Strength {
+                ranking: Ranking::TwoPair,
+                rank_cards: Some(vec![
+                    self.face_map.get(&first_pair_slot.face).unwrap()[0],     // first pair card
+                    self.face_map.get(&second_pair_slot.face).unwrap()[0],    // second pair card
+                ]),
+                kicker_cards: kicker_slot.map(|kicker_slot| vec![self.face_map.get(&kicker_slot.face).unwrap()[0]]),
+            })
+        } else {
+            None
+        }
     }
 
     fn eval_one_pair(&self) -> Option<Strength> {
-        self.eval_n_of_a_kind(2, None)
+        self.eval_n_of_a_kind(2)
     }
 
-    fn eval_n_of_a_kind(&self, n: usize, not_face: Option<Face>) -> Option<Strength> {
-        None
+    fn eval_n_of_a_kind(&self, n: usize) -> Option<Strength> {
+        let n_of_a_kind_slot = self.face_count.first()?;
+        
+        if n_of_a_kind_slot.count >= n {
+            let kicker_count = 4 - n + 1;
+            // filter for cards other than the n-of-a-kind face and take remaining cards for kicker
+            let kicker_cards: Vec<Card> = self.cards.iter().filter(|&c| c.face != n_of_a_kind_slot.face).take(kicker_count).cloned().collect();
+
+            Some(Strength {
+                ranking: match n {
+                    2 => Ranking::OnePair,
+                    3 => Ranking::ThreeOfAKind,
+                    4 => Ranking::FourOfAKind,
+                    _ => unreachable!(),
+                },
+                rank_cards: Some(vec![
+                    self.face_map.get(&n_of_a_kind_slot.face).unwrap()[0],     // n-of-a-kind card
+                ]),
+                kicker_cards: match !kicker_cards.is_empty() {
+                    true => Some(kicker_cards),
+                    false => None,
+                },
+            })
+        } else {
+            None
+        }
     }
 
     fn eval_high_card(&self) -> Strength {
         Strength {
             ranking: Ranking::HighCard,
-            rank_cards: None,     // TODO: Top card
-            kicker_cards: None,   // TODO: Remaining 4
+            rank_cards: Some(vec![self.cards[0]]),                                      // top card
+            kicker_cards: Some(self.cards.iter().skip(1).take(4).cloned().collect()),   // remaining 4
         }
     }
+}
+
+#[derive(Debug)]
+struct FaceCount {
+    pub face: Face,
+    pub count: usize,
 }
 
 #[derive(Debug)]
