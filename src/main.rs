@@ -217,6 +217,6 @@ fn main() {
     for (ranking, count) in sorted_results {
         let probability = ranking.probability();
         let impiric_probability = count as f32 / iteration_count as f32;
-        println!("{:>15}: {:>10.6} %  {:>10.6} %  (Δ {:>+10.6} %)", ranking.name(), impiric_probability * 100., probability * 100., (probability - impiric_probability) * 100.);
+        println!("{:>15}: {:>10.6} %  {:>10.6} %  (Δ {:>+10.6} %)", ranking.name(), impiric_probability * 100., probability * 100., (impiric_probability - probability) * 100.);
     }
 }

@@ -167,29 +167,46 @@ impl Hand {
     }
 
     fn eval_straight(&self, match_suit: Option<Suit>) -> Option<Strength> {
-        let mut consecutive = 1;
-        let mut prev_card = &self.cards[0];
-        let mut top_card = &self.cards[0];
+        let mut consecutive = 0;
+        let mut last_face: Option<&Face> = None;
+        let mut top_card = None;
         let mut is_straight = false;
 
-        for card in &self.cards[1..] {
-            if card.face as u8 == (prev_card.face as u8) - 1 && match_suit.map(|suit| card.suit == suit).unwrap_or(true) {
-                consecutive += 1;
+        for card in &self.cards {
+            // Ignore cards not matching a given suit
+            if !match_suit.map(|suit| card.suit == suit).unwrap_or(true) {
+                continue;
+            }
+
+            let has_lastface;
+            if let Some(last_face) = last_face {
+                has_lastface = true;
+
+                // Ignore consecutive card of same face
+                if card.face == *last_face {
+                    continue;
+                }
             } else {
+                has_lastface = false;
+            }
+
+            if !has_lastface || card.face as u8 != (*last_face.unwrap() as u8) - 1 {
                 consecutive = 1;
-                top_card = card;
+                top_card = Some(card);
+            } else {
+                consecutive += 1;
+
+                if consecutive == 5 {
+                    is_straight = true;
+                    break;
+                }
             }
 
-            if consecutive == 5 {
-                is_straight = true;
-                break;
-            }
-
-            prev_card = card;
+            last_face = Some(&card.face);
         }
 
         // Test for special case 5432A straight ("wheel")
-        if !is_straight && consecutive == 4 && top_card.face == Face::Five
+        if !is_straight && consecutive == 4 && top_card.unwrap().face == Face::Five
             && self.cards[0].face == Face::Ace && match_suit.map(|suit| self.cards[0].suit == suit).unwrap_or(true) {
             is_straight = true;
         }
@@ -197,7 +214,7 @@ impl Hand {
         if is_straight {
             Some(Strength {
                 ranking: Ranking::Straight,
-                rank_cards: Some(vec![*top_card]),
+                rank_cards: Some(vec![*top_card.unwrap()]),
                 kicker_cards: None,
             })
         } else {
