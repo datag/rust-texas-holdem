@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, io::{self, Write}, time::Instant};
 
 use crate::{
     card::{Card, Face, Suit}, deck::Deck, game_logic::{Hand, Ranking}
@@ -177,7 +177,12 @@ fn main() {
 
     // println!("{:?}\n{:?}", hand, hand.strength());
 
-    // let mut results: HashMap<Ranking, usize> = HashMap::new();
+    simulate(100_000);
+}
+
+fn simulate(iterations: u32) {
+    println!("Simulating {iterations} hands.");
+
     let keys = vec![
         Ranking::RoyalFlush,
         Ranking::StraightFlush,
@@ -191,9 +196,9 @@ fn main() {
     ];
     let mut results: HashMap<Ranking, usize> = keys.into_iter().map(|key| (key, 0)).collect();
 
+    let start_time = Instant::now();
 
-    let iteration_count = 100_000;
-    for _ in 0..iteration_count {
+    for i in 0..iterations {
         let mut deck = Deck::new();
         
         deck.shuffle();
@@ -208,7 +213,14 @@ fn main() {
 
         let result = results.entry(strength.ranking).or_insert(0);
         *result += 1;
+
+        if i % 10_000 == 0 {
+            print!(".");
+            io::stdout().flush().unwrap_or_default();
+        }
     }
+
+    println!();
 
     let mut sorted_results: Vec<_> = results.into_iter().collect();
     sorted_results.sort_by_key(|entry| entry.0);
@@ -216,7 +228,14 @@ fn main() {
 
     for (ranking, count) in sorted_results {
         let probability = ranking.probability();
-        let impiric_probability = count as f32 / iteration_count as f32;
+        let impiric_probability = count as f32 / iterations as f32;
         println!("{:>15}: {:>10.6} %  {:>10.6} %  (Δ {:>+10.6} %)", ranking.name(), impiric_probability * 100., probability * 100., (impiric_probability - probability) * 100.);
     }
+
+    let elapsed_time = start_time.elapsed();
+
+    println!();
+    println!("Simulation time: {:9.3} seconds ({:.3} us per iteration)",
+        elapsed_time.as_secs_f32(),
+        (elapsed_time.as_secs_f32() / iterations as f32) * 1_000_000f32);
 }
