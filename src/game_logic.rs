@@ -13,6 +13,7 @@ pub struct Hand {
     cards: Vec<Card>,
     face_map: HashMap<Face, Vec<Card>>,
     face_count: Vec<FaceCount>,
+    n_of_a_kind: Option<(usize, Card, Option<Vec<Card>>)>,
 }
 
 // FIXME: Rename; hand should be final hand, but the strength calculation with all cards
@@ -63,10 +64,31 @@ impl Hand {
         });
 
 
+        // Prepare n-of-a-kind
+        let mut n_of_a_kind = None;
+        if let Some(n_of_a_kind_slot) = face_count.first() {
+            if n_of_a_kind_slot.count >= 2 {
+                let max_kicker_count = 3;
+                // filter for cards other than the n-of-a-kind face and take remaining cards for kicker
+                let kicker_cards: Vec<Card> = cards.iter().filter(|&c| c.face != n_of_a_kind_slot.face).take(max_kicker_count).cloned().collect();
+    
+                n_of_a_kind = Some((
+                    n_of_a_kind_slot.count,
+                    face_map.get(&n_of_a_kind_slot.face).unwrap()[0],
+                    match !kicker_cards.is_empty() {
+                        true => Some(kicker_cards),
+                        false => None,
+                    },
+                ));
+            }
+        }
+
+
         Self {
             cards,
             face_map,
             face_count,
+            n_of_a_kind,
         }
     }
 
@@ -86,7 +108,6 @@ impl Hand {
     */
     pub fn strength(&self) -> Strength {
         let flush_result = self.eval_flush();
-
         self.eval_straight_flush(flush_result.as_ref())
             .or_else(|| self.eval_four_of_a_kind())
             .or_else(|| self.eval_full_house())
@@ -252,39 +273,37 @@ impl Hand {
         self.eval_n_of_a_kind(2)
     }
 
-    fn eval_n_of_a_kind(&self, n: usize) -> Option<Strength> {
-        let n_of_a_kind_slot = self.face_count.first()?;
-        
-        if n_of_a_kind_slot.count >= n {
-            let kicker_count = 4 - n + 1;
-            // filter for cards other than the n-of-a-kind face and take remaining cards for kicker
-            let kicker_cards: Vec<Card> = self.cards.iter().filter(|&c| c.face != n_of_a_kind_slot.face).take(kicker_count).cloned().collect();
-
-            Some(Strength {
-                ranking: match n {
-                    2 => Ranking::OnePair,
-                    3 => Ranking::ThreeOfAKind,
-                    4 => Ranking::FourOfAKind,
-                    _ => unreachable!(),
-                },
-                rank_cards: Some(vec![
-                    self.face_map.get(&n_of_a_kind_slot.face).unwrap()[0],     // n-of-a-kind card
-                ]),
-                kicker_cards: match !kicker_cards.is_empty() {
-                    true => Some(kicker_cards),
-                    false => None,
-                },
-            })
-        } else {
-            None
-        }
-    }
-
     fn eval_high_card(&self) -> Strength {
         Strength {
             ranking: Ranking::HighCard,
             rank_cards: Some(vec![self.cards[0]]),                                      // top card
             kicker_cards: Some(self.cards.iter().skip(1).take(4).cloned().collect()),   // remaining 4
+        }
+    }
+
+    fn eval_n_of_a_kind(&self, n: usize) -> Option<Strength> {
+        if let Some((count, rank_card, kicker_cards)) = &self.n_of_a_kind {
+            if count >= &n {
+                let kicker_count = 4 - n + 1;
+
+                Some(Strength {              
+                    ranking: match n {
+                        2 => Ranking::OnePair,
+                        3 => Ranking::ThreeOfAKind,
+                        4 => Ranking::FourOfAKind,
+                        _ => unreachable!(),
+                    },
+                    rank_cards: Some(vec![*rank_card]),
+                    kicker_cards: match kicker_cards {
+                        Some(kicker_cards) => Some(kicker_cards.iter().take(kicker_count).cloned().collect()),
+                        None => None,
+                    },
+                })
+            } else {
+                None
+            }
+        } else {
+            None
         }
     }
 }
