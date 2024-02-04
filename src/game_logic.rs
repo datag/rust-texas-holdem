@@ -85,10 +85,12 @@ impl Hand {
         RoyalFlush       -                      -
     */
     pub fn strength(&self) -> Strength {
-        self.eval_straight_flush()
+        let flush_result = self.eval_flush();
+
+        self.eval_straight_flush(flush_result.as_ref())
             .or_else(|| self.eval_four_of_a_kind())
             .or_else(|| self.eval_full_house())
-            .or_else(|| self.eval_flush())
+            .or_else(|| flush_result)
             .or_else(|| self.eval_straight(None))
             .or_else(|| self.eval_three_of_a_kind())
             .or_else(|| self.eval_two_pair())
@@ -96,9 +98,9 @@ impl Hand {
             .unwrap_or(self.eval_high_card())
     }
 
-    fn eval_straight_flush(&self) -> Option<Strength> {
-        if let Some(strength) = self.eval_flush() {
-            let match_suit = strength.rank_cards.unwrap().first().unwrap().suit;
+    fn eval_straight_flush(&self, flush_result: Option<&Strength>) -> Option<Strength> {
+        if let Some(strength) = flush_result {
+            let match_suit = strength.rank_cards.as_ref().unwrap().first().unwrap().suit;
 
             if let Some(strength) = self.eval_straight(Some(match_suit)) {
                 let cards = &strength.rank_cards.unwrap();

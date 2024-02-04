@@ -177,7 +177,7 @@ fn main() {
 
     // println!("{:?}\n{:?}", hand, hand.strength());
 
-    simulate(100_000);
+    simulate(1_000_000);
 }
 
 fn simulate(iterations: u32) {
