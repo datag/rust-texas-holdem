@@ -278,12 +278,12 @@ struct FaceCount {
 
 #[derive(Debug)]
 pub struct Strength {
-    ranking: Ranking,
-    rank_cards: Option<Vec<Card>>,
-    kicker_cards: Option<Vec<Card>>,
+    pub ranking: Ranking,
+    pub rank_cards: Option<Vec<Card>>,
+    pub kicker_cards: Option<Vec<Card>>,
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug, Hash)]
 pub enum Ranking {
     HighCard,
     OnePair,
