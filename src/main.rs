@@ -198,7 +198,7 @@ fn simulate(iterations: u32) {
 
     let start_time = Instant::now();
 
-    for i in 0..iterations {
+    (0..iterations).into_iter().for_each(|i| {
         let mut deck = Deck::new();
         
         deck.shuffle();
@@ -218,7 +218,7 @@ fn simulate(iterations: u32) {
             print!(".");
             io::stdout().flush().unwrap_or_default();
         }
-    }
+    });
 
     println!();
 
