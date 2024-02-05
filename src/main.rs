@@ -1,4 +1,6 @@
-use std::{collections::HashMap, io::{self, Write}, time::Instant};
+use std::{collections::HashMap, io::{self, Write}, sync::{Arc, Mutex}, time::Instant};
+
+use rayon::prelude::*;
 
 use crate::{
     card::{Card, Face, Suit}, deck::Deck, game_logic::{Hand, Ranking}
@@ -194,11 +196,11 @@ fn simulate(iterations: u32) {
         Ranking::OnePair,
         Ranking::HighCard,
     ];
-    let mut results: HashMap<Ranking, usize> = keys.into_iter().map(|key| (key, 0)).collect();
+    let results: Arc<Mutex<HashMap<Ranking, usize>>> = Arc::new(Mutex::new(keys.into_iter().map(|key| (key, 0)).collect()));
 
     let start_time = Instant::now();
 
-    (0..iterations).into_iter().for_each(|i| {
+    (0..iterations).into_par_iter().for_each(|i| {
         let mut deck = Deck::new();
         
         deck.shuffle();
@@ -211,7 +213,8 @@ fn simulate(iterations: u32) {
 
         let strength = hand.strength();
 
-        let result = results.entry(strength.ranking).or_insert(0);
+        let mut locked_results = results.lock().unwrap();
+        let result = locked_results.entry(strength.ranking).or_insert(0);
         *result += 1;
 
         if i % 10_000 == 0 {
@@ -221,6 +224,8 @@ fn simulate(iterations: u32) {
     });
 
     println!();
+
+    let results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
 
     let mut sorted_results: Vec<_> = results.into_iter().collect();
     sorted_results.sort_by_key(|entry| entry.0);
